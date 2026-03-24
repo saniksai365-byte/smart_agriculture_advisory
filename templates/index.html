@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Agriculture Advisory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 relative">
+    <nav class="w-full p-6 flex justify-end items-center gap-4 z-50 absolute top-0">
+        {% if current_user.is_authenticated %}
+        <a href="/history" class="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">History</a>
+        <span class="text-slate-500 text-sm">Welcome, {{ current_user.username }}</span>
+        <a href="/logout"
+            class="text-red-500 hover:bg-red-50 text-sm font-medium border border-red-200 px-4 py-2 rounded-lg transition-colors">Logout</a>
+        {% else %}
+        <a href="/login" class="text-slate-500 hover:text-slate-800 text-sm font-medium transition-colors">Login</a>
+        <a href="/register"
+            class="text-emerald-600 hover:bg-emerald-50 text-sm font-medium border border-emerald-200 px-4 py-2 rounded-lg transition-colors">Register</a>
+        {% endif %}
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-6 pt-24">
+        <div class="max-w-4xl text-center space-y-8 bg-white p-12 rounded-2xl shadow-sm border border-slate-200">
+            <h1 class="text-5xl md:text-7xl font-bold text-emerald-700">
+                Grow Smarter, <br> Sell Better.
+            </h1>
+            <p class="text-xl text-slate-500 font-light max-w-2xl mx-auto">
+                Discover what to grow and exactly when to sell based on real-time environmental data and AI-driven
+                market predictions.
+            </p>
+            <div class="pt-8 w-full max-w-sm mx-auto">
+                {% if current_user.is_authenticated %}
+                <a href="/form"
+                    class="block w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-lg transition-colors">
+                    Go to Dashboard
+                </a>
+                {% else %}
+                <a href="/login"
+                    class="block w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-lg transition-colors">
+                    Login to Start
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

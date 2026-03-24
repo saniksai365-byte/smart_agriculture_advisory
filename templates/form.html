@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Details - Smart Agriculture Advisory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6 pt-20 bg-slate-50 text-slate-800">
+    <!-- Navigation -->
+    <nav class="absolute top-0 w-full p-6 flex justify-between items-center z-50">
+        <a href="/" class="text-slate-400 hover:text-slate-600 transition-colors font-medium">← Home</a>
+        <div class="flex items-center gap-4">
+            {% if current_user.is_authenticated %}
+            <a href="/history" class="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">History</a>
+            <span class="text-slate-500 text-sm">Hello, {{ current_user.username }}</span>
+            <a href="/logout"
+                class="text-red-500 hover:bg-red-50 text-sm font-medium border border-red-200 px-3 py-1.5 rounded-lg transition-colors">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative z-10 my-auto">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-bold text-slate-800">Tell Us About Your Farm</h2>
+            <p class="text-slate-500 text-sm mt-2">We analyze your conditions to give the best advice.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div
+            class="mb-6 p-4 rounded-lg text-sm text-center {{ 'bg-red-50 text-red-600 border border-red-200' if category == 'danger' else 'bg-emerald-50 text-emerald-600 border border-emerald-200' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="/predict" method="POST" class="space-y-6">
+            <div>
+                <label for="location" class="block text-sm font-medium text-slate-600 mb-1">Constituency (Andhra
+                    Pradesh)</label>
+                <input type="text" id="location" name="location" list="constituency-list" required
+                    placeholder="Type your constituency e.g., Vijayawada" value="{{ request.args.get('location', '') }}"
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800 placeholder-slate-400">
+                <datalist id="constituency-list">
+                    {% for item in constituencies %}
+                    <option value="{{ item }}">
+                        {% endfor %}
+                </datalist>
+            </div>
+
+            <div>
+                <label for="soil" class="block text-sm font-medium text-slate-600 mb-1">Soil Type</label>
+                <select id="soil" name="soil" required
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800">
+                    <option value="" disabled {% if not request.args.get('soil') %}selected{% endif %}>Select soil type
+                    </option>
+                    <option value="red_sandy_loam" {% if request.args.get('soil')=='red_sandy_loam' %}selected{% endif
+                        %}>Red Sandy Loams</option>
+                    <option value="black_cotton" {% if request.args.get('soil')=='black_cotton' %}selected{% endif %}>
+                        Black Cotton Soils</option>
+                    <option value="coastal_alluvial" {% if request.args.get('soil')=='coastal_alluvial' %}selected{%
+                        endif %}>Coastal Alluvial Soils</option>
+                    <option value="laterite" {% if request.args.get('soil')=='laterite' %}selected{% endif %}>Laterite
+                        Soils</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="season" class="block text-sm font-medium text-slate-600 mb-1">Season</label>
+                <select id="season" name="season" required
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800">
+                    <option value="" disabled {% if not request.args.get('season') %}selected{% endif %}>Select season
+                    </option>
+                    <option value="kharif" {% if request.args.get('season')=='kharif' %}selected{% endif %}>Kharif
+                        (Monsoon)</option>
+                    <option value="rabi" {% if request.args.get('season')=='rabi' %}selected{% endif %}>Rabi (Winter)
+                    </option>
+                    <option value="zaid" {% if request.args.get('season')=='zaid' %}selected{% endif %}>Zaid (Summer)
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label for="water" class="block text-sm font-medium text-slate-600 mb-1">Water Availability</label>
+                <select id="water" name="water" required
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800">
+                    <option value="" disabled {% if not request.args.get('water') %}selected{% endif %}>Select water
+                        level</option>
+                    <option value="low" {% if request.args.get('water')=='low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if request.args.get('water')=='medium' %}selected{% endif %}>Medium
+                    </option>
+                    <option value="high" {% if request.args.get('water')=='high' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+
+            <button type="submit"
+                class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+                Analyze & Recommend
+            </button>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Agriculture Advisory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-800">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-bold text-slate-800">Welcome Back</h2>
+            <p class="text-slate-500 text-sm mt-2">Login to access your advisory dashboard.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div
+            class="mb-6 p-4 rounded-lg text-sm text-center {{ 'bg-red-50 text-red-600 border border-red-200' if category == 'danger' else 'bg-emerald-50 text-emerald-600 border border-emerald-200' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="/login" method="POST" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+                <input type="text" id="username" name="username" required
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800 placeholder-slate-400">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+                <input type="password" id="password" name="password" required
+                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-slate-800 placeholder-slate-400">
+            </div>
+
+            <button type="submit"
+                class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+                Login
+            </button>
+        </form>
+
+        <p class="mt-8 text-center text-slate-500 text-sm">
+            Don't have an account? <a href="/register"
+                class="text-emerald-600 font-medium hover:text-emerald-700 transition-colors">Register here</a>
+        </p>
+        <p class="mt-3 text-center text-slate-500 text-sm">
+            <a href="/" class="text-slate-400 hover:text-slate-600 transition-colors">← Back to Home</a>
+        </p>
+    </div>
+</body>
+
+</html>

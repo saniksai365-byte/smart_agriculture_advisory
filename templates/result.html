@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Strategy - Smart Agriculture Advisory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-6 md:p-12 pt-24 bg-slate-50 text-slate-800 relative">
+    <!-- Navigation -->
+    <nav class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50">
+        <a href="/" class="text-slate-500 hover:text-slate-800 transition-colors font-medium">← Home</a>
+        <div class="flex items-center gap-4">
+            {% if current_user.is_authenticated %}
+            <a href="/history" class="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">History</a>
+            <span class="text-slate-500 text-sm">Hello, {{ current_user.username }}</span>
+            <a href="/logout"
+                class="text-red-500 hover:bg-red-50 text-sm font-medium border border-red-200 px-3 py-1.5 rounded-lg transition-colors">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto space-y-8">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold text-slate-800">Action Plan for <span class="text-emerald-700">{{
+                    result.location }}</span></h1>
+            <div class="flex items-center gap-3">
+                <a href="/form?location={{ result.location }}&soil={{ result.original_soil }}&season={{ result.original_season }}&water={{ result.original_water }}"
+                    class="text-slate-600 hover:bg-slate-100 transition-colors border border-slate-300 px-4 py-2 rounded-lg font-medium shadow-sm hidden md:block">✎
+                    Edit Inputs</a>
+                <a href="/form"
+                    class="text-emerald-600 hover:bg-emerald-50 transition-colors border border-emerald-200 px-4 py-2 rounded-lg font-medium shadow-sm">New
+                    Analysis</a>
+            </div>
+        </div>
+
+        <!-- THE DECISION PANEL -->
+        <div class="bg-white p-8 grid grid-cols-1 md:grid-cols-3 gap-8 shadow-sm border border-slate-200 rounded-2xl">
+            <div class="space-y-2">
+                <p class="text-slate-500 font-medium text-sm uppercase tracking-wider">Top Recommendation</p>
+                <p class="text-5xl font-bold text-emerald-700">{{ result.grow }}</p>
+                <p
+                    class="text-sm text-emerald-600 border border-emerald-200 inline-block px-2 py-1 rounded bg-emerald-50 text-medium">
+                    {{ result.confidence }}% Confidence
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-slate-500 font-medium text-sm uppercase tracking-wider">Best Time To Sell</p>
+                <p class="text-4xl font-bold text-slate-800">{{ result.best_selling_time }}</p>
+                <p class="text-sm text-slate-500">Wait for peak market demand.</p>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-slate-500 font-medium text-sm uppercase tracking-wider">Expected Price</p>
+                <p class="text-4xl font-bold text-slate-800">₹{{ result.expected_price }}<span
+                        class="text-xl text-slate-400 font-normal">/qtl</span></p>
+                <p class="text-sm text-slate-500">Based on historic trends.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Context & Alternatives -->
+            <div class="space-y-8">
+                <!-- Weather Advice -->
+                <div class="bg-white p-6 shadow-sm border border-slate-200 rounded-2xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z">
+                            </path>
+                        </svg>
+                        <h3 class="text-xl font-bold text-slate-800">Weather Outlook</h3>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">{{ result.weather_advice }}</p>
+                </div>
+
+                <!-- Alternatives -->
+                <div class="bg-white p-6 shadow-sm border border-slate-200 rounded-2xl">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Strong Alternatives</h3>
+                    <div class="space-y-4">
+                        {% for alt_crop, alt_conf in result.alternatives %}
+                        <div
+                            class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+                            <span class="font-medium text-slate-700 text-lg">{{ alt_crop }}</span>
+                            <span class="text-emerald-700 font-medium bg-emerald-100 px-3 py-1 rounded-full text-sm">
+                                {{ alt_conf }}% Match
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-white p-6 flex flex-col shadow-sm border border-slate-200 rounded-2xl">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">6-Month Market Projection ({{ result.grow }})</h3>
+                <div class="flex-grow w-full h-64 relative">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('priceChart').getContext('2d');
+
+        // Gradient for line chart
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); // emerald-500 semi-transparent
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ result.price_trend_labels | tojson }},
+            datasets: [{
+                label: 'Predicted Price (₹)',
+                data: {{ result.price_trend_data | tojson }},
+            borderColor: '#059669', // emerald-600
+            backgroundColor: gradient,
+            borderWidth: 3,
+            pointBackgroundColor: '#047857',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.4
+                }]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#1e293b',
+                    bodyColor: '#047857',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function (context) {
+                            return '₹' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#f1f5f9', drawBorder: false },
+                    ticks: { color: '#64748b', font: { family: "'Outfit', sans-serif" } }
+                },
+                y: {
+                    grid: { color: '#f1f5f9', drawBorder: false },
+                    ticks: {
+                        color: '#64748b', font: { family: "'Outfit', sans-serif" },
+                        callback: function (value) {
+                            return '₹' + value;
+                        }
+                    }
+                }
+            }
+        }
+        });
+    </script>
+</body>
+
+</html>
