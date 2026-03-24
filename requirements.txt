@@ -5,3 +5,4 @@ pandas
 scikit-learn
 Flask-Login
 Flask-Session
+PyMySQL
