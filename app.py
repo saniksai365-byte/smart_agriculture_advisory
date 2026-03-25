@@ -184,6 +184,80 @@ def history():
     conn.close()
     return render_template('history.html', records=records)
 
+@app.route('/history/delete/<int:record_id>', methods=['POST'])
+@login_required
+def delete_history(record_id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM history WHERE id=? AND user_id=?", (record_id, current_user.id))
+    conn.commit()
+    conn.close()
+    flash('Record deleted successfully.', 'success')
+    return redirect(url_for('history'))
+
+@app.route('/history/view/<int:record_id>')
+@login_required
+def view_history(record_id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM history WHERE id=? AND user_id=?", (record_id, current_user.id))
+    record = c.fetchone()
+    conn.close()
+
+    if not record:
+        flash('Record not found.', 'danger')
+        return redirect(url_for('history'))
+
+    # Reconstruct form_data-like dictionary to recalculate dynamic fields
+    form_data = {
+        'location': record['location'],
+        'soil': record['soil'],
+        'season': record['season'],
+        'water': record['water']
+    }
+
+    processed_data = process_form_input(form_data)
+
+    top_crops = recommend_crop(
+        soil=processed_data['soil'],
+        season=processed_data['season'],
+        water=processed_data['water']
+    )
+
+    best_crop = record['crop']
+    confidence = 0
+    alternatives = []
+    
+    for c_name, c_conf in top_crops:
+        if c_name == best_crop:
+            confidence = c_conf
+        else:
+            alternatives.append((c_name, c_conf))
+            
+    if confidence == 0 and top_crops:
+        confidence = 0
+        alternatives = top_crops
+
+    price_trend = predict_price_trend(best_crop)
+    weather_advice = get_weather_advice(processed_data['location'])
+
+    decision_data = {
+        'location': processed_data['location'],
+        'grow': best_crop,
+        'confidence': confidence,
+        'alternatives': alternatives,
+        'best_selling_time': price_trend.get('best_month', 'N/A'),
+        'expected_price': price_trend.get('expected_price', 'N/A'),
+        'price_trend_labels': price_trend.get('labels', []),
+        'price_trend_data': price_trend.get('prices', []),
+        'weather_advice': weather_advice,
+        'original_soil': form_data.get('soil'),
+        'original_season': form_data.get('season'),
+        'original_water': form_data.get('water')
+    }
+
+    return render_template('result.html', result=decision_data)
+
 # ----------------- RUN -----------------
 
 if __name__ == "__main__":
